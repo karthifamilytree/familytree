@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html>
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<style>
+:root{--bg:#f6f1e9;--card:#fff;--ink:#2b2622;--muted:#7a6f66;--accent:#a8502a;--accent2:#2f6b5a;--line:#c7b49e;--m:#3b6ea5;--f:#b2457a;--danger:#b3261e}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer}
+.top{position:sticky;top:0;z-index:5;box-shadow:0 2px 6px rgba(0,0,0,.12)}
+header{background:var(--accent);color:#fff;display:flex;align-items:center;gap:8px;padding:10px 12px}
+header h1{font-size:18px;margin:0;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.titleBox{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.credit{font-size:11.5px;color:rgba(255,255,255,.92);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.credit a{color:#fff;text-decoration:underline;text-underline-offset:2px}
+.creditRow{display:none;background:var(--accent);color:#fff;padding:0 12px 8px;margin-top:-4px;white-space:normal}
+@media (max-width:640px){ .titleBox .credit{display:none} .creditRow{display:block} }
+.hbtn{background:rgba(255,255,255,.2);color:#fff;border:0;border-radius:10px;padding:8px 12px;font-size:14px}
+nav.tabs{display:flex;gap:6px;padding:6px 12px;background:#efe5d8}
+nav.tabs button{flex:1;border:0;background:transparent;padding:8px;border-radius:10px;font-size:14px;color:var(--muted)}
+nav.tabs button.on{background:#fff;color:var(--ink);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.bar{display:flex;align-items:center;gap:8px;padding:10px 12px;flex-wrap:wrap}
+.bar label{font-size:13px;color:var(--muted)}
+.bar select{flex:1;min-width:160px}
+select,input[type=text],input[type=tel],textarea{width:100%;padding:10px 12px;border:1px solid #d8cbbb;border-radius:10px;background:#fff;font:inherit;color:inherit}
+textarea{min-height:70px;resize:vertical}
+.sbtn{border:1px solid #d8cbbb;background:#fff;border-radius:10px;padding:8px 12px;font-size:14px;white-space:nowrap}
+#treeWrap{overflow:auto;cursor:grab;user-select:none;padding:8px 8px 16px;height:60vh;overscroll-behavior:contain}
+.tree{width:max-content;margin:0 auto;padding:4px 10px}
+.tree ul{position:relative;display:flex;justify-content:center;margin:0;padding:20px 0 0}
+.tree>ul{padding-top:0}
+.tree li{list-style:none;position:relative;display:flex;flex-direction:column;align-items:center;padding:20px 5px 0}
+.tree li::before,.tree li::after{content:'';position:absolute;top:0;right:50%;width:50%;height:20px;border-top:2px solid var(--line)}
+.tree li::after{right:auto;left:50%;border-left:2px solid var(--line)}
+.tree li:only-child::before,.tree li:only-child::after{display:none}
+.tree li:only-child{padding-top:0}
+.tree li:first-child::before,.tree li:last-child::after{border:0 none}
+.tree li:last-child::before{border-right:2px solid var(--line);border-radius:0 8px 0 0}
+.tree li:first-child::after{border-radius:8px 0 0 0}
+.tree ul ul::before{content:'';position:absolute;top:0;left:50%;height:20px;border-left:2px solid var(--line)}
+.couple{display:flex;align-items:stretch;gap:3px;background:rgba(255,255,255,.45);border-radius:14px;padding:3px}
+.amp{align-self:center;color:var(--f);font-size:13px}
+.node{position:relative;display:flex;flex-direction:column;align-items:center;width:124px;padding:8px 5px 7px;background:var(--card);border:0;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.node:active{transform:scale(.97)}
+.nm{font-size:12px;font-weight:600;margin-top:5px;line-height:1.25;word-break:normal;overflow-wrap:anywhere}
+.yr{font-size:11px;color:var(--muted);margin-top:1px}
+.av{flex:none;border-radius:50%;object-fit:cover;border:3px solid var(--line);background:#ddd;display:inline-flex;align-items:center;justify-content:center;font-weight:700;color:#fff;overflow:hidden}
+.M .av,.av.M{border-color:var(--m)} .F .av,.av.F{border-color:var(--f)}
+.dead .av{filter:grayscale(1)}
+.zoom{display:flex;gap:6px}
+.zoom .hbtn{width:38px;padding:8px 0;font-size:18px;line-height:1}
+.list{padding:0 12px 90px}
+.row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:#fff;border:0;border-radius:12px;padding:10px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.row .sub{font-size:12.5px;color:var(--muted)}
+.empty{text-align:center;padding:60px 20px;color:var(--muted)}
+.pbtn{background:var(--accent);color:#fff;border:0;border-radius:12px;padding:12px 18px;font-size:15px;font-weight:600}
+.pbtn.alt{background:var(--accent2)}
+.ghost{background:#fff;border:1px solid #d8cbbb;border-radius:12px;padding:10px 14px;font-size:14px}
+.danger{background:#fff;border:1px solid var(--danger);color:var(--danger);border-radius:12px;padding:10px 14px}
+.danger.armed{background:var(--danger);color:#fff}
+/* sheets */
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;z-index:20;align-items:flex-end;justify-content:center}
+.sheet-bg.open{display:flex}
+.sheet{background:#fff;width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:16px 16px 28px;position:relative}
+@media(min-width:700px){.sheet-bg{align-items:center}.sheet{border-radius:18px}}
+.x{position:absolute;right:10px;top:10px;border:0;background:#f1ebe3;border-radius:50%;width:34px;height:34px;font-size:18px}
+.treeBtn{position:absolute;right:52px;top:65px;height:34px;border:0;background:#f1ebe3;border-radius:17px;padding:0 12px;font-size:13px;font-weight:600}
+.phead{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;margin-top:6px}
+.phead h2{margin:4px 0 0;font-size:21px}
+.facts{margin:12px 0;display:grid;gap:6px}
+.facts div{background:#f8f4ee;border-radius:10px;padding:8px 12px;font-size:14px}
+.facts b{color:var(--muted);font-weight:500;margin-right:6px}
+.rel h4{margin:14px 0 6px;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid #e3d8ca;background:#fff;border-radius:20px;padding:3px 10px 3px 3px;font-size:14px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}
+.actions .wide{grid-column:1/-1}
+form .f{margin-bottom:12px}
+form label.l{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+.photoBox{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:14px}
+.pbtns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.pbtns label{position:relative;overflow:hidden}
+.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.seg{display:flex;gap:6px}
+.seg label{flex:1;border:1px solid #d8cbbb;border-radius:10px;padding:9px;text-align:center;font-size:14px}
+.seg input{position:absolute;opacity:0}
+.seg label.on{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.check{display:flex;align-items:center;gap:8px;font-size:14px}
+.hint{font-size:12px;color:var(--muted);margin-top:3px}
+#busy{position:fixed;inset:0;background:rgba(255,255,255,.7);display:none;z-index:40;align-items:center;justify-content:center;flex-direction:column;gap:12px;font-weight:600}
+#busy.on{display:flex}
+.spin{width:38px;height:38px;border:4px solid #e6d8c6;border-top-color:var(--accent);border-radius:50%;animation:s 1s linear infinite}
+@keyframes s{to{transform:rotate(360deg)}}
+#ordList{display:flex;flex-direction:column;gap:6px}
+.oitem{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #e3d8ca;border-radius:12px;padding:6px 8px;position:relative;transition:box-shadow .15s}
+.oitem.dragging{z-index:2;box-shadow:0 6px 18px rgba(0,0,0,.2);transition:none;background:#fffaf3}
+.onum{width:22px;text-align:center;font-weight:700;color:var(--muted)}
+.oname{flex:1;font-size:15px}
+.handle{font-size:22px;padding:6px 10px;color:var(--muted);cursor:grab;touch-action:none;user-select:none}
+#tip{position:fixed;z-index:60;pointer-events:none;background:#2b2622;color:#fff;font-size:13px;line-height:1.5;padding:6px 10px;border-radius:8px;white-space:pre;box-shadow:0 4px 12px rgba(0,0,0,.25);display:none}
+.dm{display:inline-block;width:38px;height:19px;vertical-align:-4px;margin-right:4px;color:#8a7768}
+.dm svg{width:100%;height:100%;display:block}
+.dm.big{width:56px;height:28px;vertical-align:-7px}
+.yr .dm:only-child{margin-right:0}
+.up{position:absolute;top:5px;width:26px;height:26px;border-radius:50%;background:#efe5d8;display:flex;align-items:center;justify-content:center;font-size:14px;line-height:1;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.up:hover{background:#e3d3bf}
+.up-r{right:5px} .up-l{left:5px}
+.crop-bg{position:fixed;inset:0;z-index:45;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:12px}
+.crop-box{background:#fff;border-radius:18px;padding:14px 16px 18px;width:100%;max-width:420px}
+.crop-box h3{margin:0 0 2px;font-size:17px}
+.crop-hint{font-size:12.5px;color:var(--muted);margin-bottom:10px}
+.crop-stage{position:relative;width:100%;aspect-ratio:1;overflow:hidden;background:#222;border-radius:12px;touch-action:none;cursor:grab;user-select:none}
+.crop-img{position:absolute;left:0;top:0;transform-origin:0 0;max-width:none}
+.crop-ring{position:absolute;inset:0;border-radius:50%;box-shadow:0 0 0 999px rgba(0,0,0,.45);border:2px solid rgba(255,255,255,.9);pointer-events:none}
+.crop-tools{display:flex;align-items:center;gap:8px;margin-top:12px;color:var(--muted)}
+.crop-zoom{flex:1;accent-color:var(--accent2)}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#2b2622;color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;z-index:50;display:none;max-width:90vw;text-align:center}
+</style>
+</head>
+<body>
+<div class="top">
+  <header>
+    <div class="titleBox">
+      <h1 id="title"><?= appTitle ?></h1>
+      <div class="credit">Developed by: B.கார்த்திகேயன், Maintained by G.கௌதம் - <a href="tel:8056564927">8056564927</a></div>
+    </div>
+    <button class="hbtn" id="btnRefresh" title="Refresh">⟳</button>
+    <span class="zoom" id="zoomCtl" style="display:none">
+      <button class="hbtn" id="zOut" aria-label="Zoom out" title="Zoom out">－</button>
+      <button class="hbtn" id="zIn" aria-label="Zoom in" title="Zoom in">＋</button>
+    </span>
+    <button class="hbtn" id="btnAdd">＋ Add</button>
+  </header>
+  <div class="credit creditRow">Developed by: B.கார்த்திகேயன், Maintained by G.கௌதம் - <a href="tel:8056564927">8056564927</a></div>
+  <nav class="tabs">
+    <button data-view="tree" class="on">🌳 Tree</button>
+    <button data-view="list">👥 Everyone</button>
+  </nav>
+</div>
+
+<main id="main"><div class="empty"><div class="spin" style="margin:0 auto 12px"></div>Loading family…</div></main>
+
+
+
+<div class="sheet-bg" id="sheetBg"><div class="sheet" id="sheet"></div></div>
+<div id="busy"><div class="spin"></div><div id="busyMsg">Saving…</div></div>
+<div id="toast"></div>
+<div id="tip"></div>
+
+<script>
+const NEEDS_CODE = <?!= needsCode ? 'true' : 'false' ?>;
+let members = [], byId = {}, rootId = null, view = 'tree', zoom = 1, query = '';
+let editing = null, photoData = null, removePhoto = false, linkChild = null;
+
+const $ = s => document.querySelector(s);
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+  del(k) { try { localStorage.removeItem(k); } catch (e) {} }
+};
+try { zoom = parseFloat(store.get('ft_zoom')) || 1; } catch (e) {}
+
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function ids(s) { return String(s || '').split(',').map(x => x.trim()).filter(Boolean); }
+function call(fn, ...args) {
+  return new Promise((res, rej) => google.script.run.withSuccessHandler(res).withFailureHandler(rej)[fn](...args));
+}
+function toast(msg, ms) {
+  const t = $('#toast'); t.textContent = msg; t.style.display = 'block';
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.style.display = 'none', ms || 2800);
+}
+function busy(on, msg) { $('#busyMsg').textContent = msg || 'Saving…'; $('#busy').classList.toggle('on', !!on); }
+function errMsg(e) { return String((e && e.message) || e || 'Something went wrong').replace(/^(Error|Exception):\s*/, ''); }
+
+// ---------- relationships ----------
+function year(s) { const m = String(s || '').match(/\b(\d{4})\b/); return m ? +m[1] : null; }
+function lifespan(p) {
+  const b = year(p.birthDate), d = year(p.deathDate);
+  if (b && d) return b + '–' + d;
+  if (b) return 'b. ' + b;
+  if (d) return 'd. ' + d;
+  return '';
+}
+// Children order: saved order (1 = eldest) first, then birth year, then the order they were entered
+let rowIdx = {};
+const ordOf = m => +m.birthOrder || 1e6;
+const byAge = (a, b) => (ordOf(a) - ordOf(b)) || ((year(a.birthDate) || 9999) - (year(b.birthDate) || 9999)) || ((rowIdx[a.id] || 0) - (rowIdx[b.id] || 0));
+function spousesOf(p) {
+  const set = new Set(ids(p.spouseIds));
+  members.forEach(m => { if (ids(m.spouseIds).includes(p.id)) set.add(m.id); });
+  set.delete(p.id);
+  return [...set].map(i => byId[i]).filter(Boolean);
+}
+function kidsOf(p) {
+  const sp = new Set(spousesOf(p).map(s => s.id));
+  return members.filter(c => c.id !== p.id && (
+    c.fatherId === p.id || c.motherId === p.id ||
+    (sp.has(c.fatherId) && !byId[c.motherId]) || (sp.has(c.motherId) && !byId[c.fatherId])
+  )).sort(byAge);
+}
+function ownKids(p) { return members.filter(c => c.fatherId === p.id || c.motherId === p.id).sort(byAge); }
+function siblingsOf(p) {
+  return members.filter(m => m.id !== p.id && ((p.fatherId && m.fatherId === p.fatherId) || (p.motherId && m.motherId === p.motherId))).sort(byAge);
+}
+function countDesc(p, seen) {
+  seen = seen || new Set(); if (seen.has(p.id)) return 0; seen.add(p.id);
+  return ownKids(p).reduce((n, k) => n + 1 + countDesc(k, seen), 0);
+}
+function pickRoot() {
+  const tops = members.filter(m => !byId[m.fatherId] && !byId[m.motherId]);
+  let best = null, bestN = -1;
+  (tops.length ? tops : members).forEach(m => { const n = countDesc(m); if (n > bestN || (n === bestN && (year(m.birthDate) || 9999) < (year(best.birthDate) || 9999))) { best = m; bestN = n; } });
+  return best ? best.id : null;
+}
+
+// ---------- rendering ----------
+function photoUrl(id, w) { return 'https://lh3.googleusercontent.com/d/' + encodeURIComponent(id) + '=w' + (w || 400); }
+function photoFallback(id, w) { return 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(id) + '&sz=w' + (w || 400); }
+function avatar(p, size) {
+  const st = 'width:' + size + 'px;height:' + size + 'px;font-size:' + Math.round(size * 0.42) + 'px';
+  const lt = 'width:' + size + 'px;height:' + size + 'px';
+  const g = p.gender || '';
+  if (p.photoId) {
+    return '<img class="av ' + g + '" style="' + st + '" loading="lazy" alt="" src="' + photoUrl(p.photoId, size > 80 ? 600 : 200) +
+      '" onerror="this.onerror=null;this.src=\'' + photoFallback(p.photoId, size > 80 ? 600 : 200) + '\'">';
+  }
+  const ini = firstChar(p.name);
+  const bg = g === 'M' ? '#7f9fc4' : g === 'F' ? '#c88aa8' : '#b5a493';
+  return '<span class="av ' + g + '" style="' + lt + ';background:' + bg + '"><span style="' + letterStyle(ini, size) + '">' + esc(ini) + '</span></span>';
+}
+// First full letter of the name, including Tamil vowel signs and joined letters
+// (மோகன → மோ, ஸ்ரீகாந்த் → ஸ்ரீ, க்ஷமா → க்ஷ)
+function firstChar(name) {
+  name = String(name || '').trim();
+  if (!name) return '?';
+  let parts = null;
+  try {
+    if (window.Intl && Intl.Segmenter) parts = Array.from(new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(name), x => x.segment);
+  } catch (e) {}
+  if (!parts) parts = name.match(/[\s\S][\u0300-\u036F\u0B82\u0BBE-\u0BCD\u0BD7\u0900-\u0903\u093A-\u094F\u200C\u200D]*/g) || [name[0]];
+  let out = parts[0], i = 1;
+  while (/\u0BCD$/.test(out) && i < parts.length && i < 3) out += parts[i++]; // dead consonant joins the next letter
+  return out.toUpperCase();
+}
+// Size and centre the letter so it is as big as possible while staying inside the circle
+const letterCache = {};
+function letterMetrics(txt) {
+  let m = letterCache[txt];
+  if (m) return m;
+  m = { w: 0.65, h: 0.75, dy: 0 };
+  try {
+    const ctx = (letterMetrics.c = letterMetrics.c || document.createElement('canvas')).getContext('2d');
+    ctx.font = '700 100px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';
+    const t = ctx.measureText(txt);
+    const A = t.actualBoundingBoxAscent, D = t.actualBoundingBoxDescent;
+    const L = t.actualBoundingBoxLeft || 0, R = t.actualBoundingBoxRight;
+    const FA = t.fontBoundingBoxAscent, FD = t.fontBoundingBoxDescent;
+    if (R + L > 0 && A + D > 0) {
+      m.w = (R + L) / 100; m.h = (A + D) / 100;
+      // move the ink (not the font box) to the exact centre of the circle
+      if (FA != null && FD != null) m.dy = (FD - FA + A - D) / 200;
+    }
+  } catch (e) {}
+  return (letterCache[txt] = m);
+}
+function letterStyle(txt, size) {
+  const m = letterMetrics(txt);
+  const inner = size - 6;                                   // circle minus its border
+  const fs = Math.max(9, Math.min(inner * 0.92 / Math.hypot(m.w, m.h), inner * 0.8));
+  return 'font-size:' + fs.toFixed(1) + 'px;line-height:1;transform:translateY(' + (m.dy * fs).toFixed(1) + 'px)';
+}
+// Hover tooltip with phone and place (only when at least one is filled in)
+function tipAttr(p) {
+  const lines = [];
+  if (p.phone) lines.push('📞 ' + p.phone);
+  if (p.place) lines.push('📍 ' + p.place);
+  return lines.length ? ' data-tip="' + esc(lines.join('\n')) + '"' : '';
+}
+// Small Nandi-and-lingam mark for people who have passed away
+const DEAD_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 32" aria-hidden="true" xmlns:c2pa="http://c2pa.org/manifest"><circle cx="14" cy="13" r="12" fill="currentColor" opacity=".18"/><g fill="currentColor"><path fill-rule="evenodd" d="M9 18V9C9 4.6 11.2 2 14 2S19 4.6 19 9V18Z M10.6 7.6H17.4V8.6H10.6Z M10.4 9.6H17.6V10.6H10.4Z M10.4 11.6H17.6V12.6H10.4Z M14 13.6A1.1 1.1 0 1 1 13.99 13.6Z"/><path d="M3 19.6C3 17.7 7 16.6 14 16.6C18 16.6 21.4 17 23.4 17.6L29.6 18.3C30.8 18.4 30.8 20.4 29.6 20.5L23.6 21.3C21.6 22.1 18 22.6 14 22.6C7 22.6 3 21.5 3 19.6Z"/><path d="M6.5 23.4H21.5Q22.6 23.4 22.6 24.4V25Q22.6 25.9 21.5 25.9H6.5Q5.4 25.9 5.4 25V24.4Q5.4 23.4 6.5 23.4Z"/><path d="M4.4 26.8H23.6Q24.8 26.8 24.8 27.9V28.6Q24.8 29.6 23.6 29.6H4.4Q3.2 29.6 3.2 28.6V27.9Q3.2 26.8 4.4 26.8Z"/><path fill-rule="evenodd" d="M41 17C41.4 15 42.6 13.8 44 13C45 11.2 47.2 10.6 48.8 11.6C49.6 12.6 50.4 13.4 52 13.6L57 14C60.4 14.4 62.6 17.4 62.6 21.6V28C62.6 29 61.8 29.6 60.8 29.6H41.6C40.6 29.6 40 28.8 40.2 27.8Z M41.6 21.4A1.2 1.2 0 1 1 41.59 21.4Z"/><path d="M39 15.6L44.4 14.2L45.2 23.6L41.2 24.4C40.4 21.2 39.6 18.4 39 15.6Z"/><path d="M36.6 10.8C38.4 10.2 40.6 11 41.6 12.6L42.4 16.2L39.6 18.6L37.8 19.6C36.6 20 35.4 19.4 35 18.2L34.4 15C34 13.2 34.8 11.4 36.6 10.8Z"/><path d="M35.9 11.4C35 9.8 35.2 7.9 36.4 6.6C36.4 8.3 37 9.6 37.9 10.6Z"/><path d="M39.4 10.8C40 9.1 41.2 7.9 42.9 7.7C41.9 8.8 41.4 10 41.3 11.4Z"/><ellipse cx="42.8" cy="12.4" rx="2.1" ry="0.85" transform="rotate(-18 42.8 12.4)"/><path d="M33.4 30.4H63" stroke="currentColor" stroke-width="1" opacity=".5"/></g><metadata><c2pa:manifest>AAAWgmp1bWIAAAAeanVtZGMycGEAEQAQgAAAqgA4m3EDYzJwYQAAABZcanVtYgAAAEdqdW1kYzJtYQARABCAAACqADibcQN1cm46YzJwYTo4ZTY5MDRjNC1hMzRjLTQxZTYtODQzNC00ZTdlMmFlMTY2NGMAAAADl2p1bWIAAAApanVtZGMyYXMAEQAQgAAAqgA4m3EDYzJwYS5hc3NlcnRpb25zAAAAALxqdW1iAAAARGp1bWRjYm9yABEAEIAAAKoAOJtxE2MycGEuaW5ncmVkaWVudC52MwAAAAAYYzJzaB6wWJwqrXjUS4yL92M0cxQAAABwY2JvcqNpZGM6Zm9ybWF0bWltYWdlL3N2Zyt4bWxqaW5zdGFuY2VJRHgseG1wOmlpZDplOGRjNGJkMy05NWFiLTQ1NGItOWE1Ni1lMGJlODBkMjRkNjNscmVsYXRpb25zaGlwaHBhcmVudE9mAAAB4mp1bWIAAABBanVtZGNib3IAEQAQgAAAqgA4m3ETYzJwYS5hY3Rpb25zLnYyAAAAABhjMnNo+6v/Jz1rPe1wauxZvc31egAAAZljYm9yomdhY3Rpb25zgqJmYWN0aW9ua2MycGEub3BlbmVkanBhcmFtZXRlcnOha2luZ3JlZGllbnRzgaJjdXJseC1zZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmluZ3JlZGllbnQudjNkaGFzaFggsNc9EmLfjtOwaHX8Q59JekSIXOXcU9fM8lEG2br78gKkZmFjdGlvbngdY29tLmFudGhyb3BpYy5jbGF1ZGUucHJvdmlkZWRqcGFyYW1ldGVyc6F4H2NvbS5hbnRocm9waWMub3JpZ2luLWNvbmZpZGVuY2VndW5rbm93bmtkZXNjcmlwdGlvbnhmQ2xhdWRlIHByb3ZpZGVkIHRoaXMgZmlsZSBhdCB0aGUgcmVxdWVzdCBvZiBhIHVzZXIgYW5kIG1heSBoYXZlIGNyZWF0ZWQgb3IgbW9kaWZpZWQgdGhlIGZpbGUgY29udGVudHMubXNvZnR3YXJlQWdlbnShZG5hbWVmQ2xhdWRlcmFsbEFjdGlvbnNJbmNsdWRlZPUAAADIanVtYgAAAEBqdW1kY2JvcgARABCAAACqADibcRNjMnBhLmhhc2guZGF0YQAAAAAYYzJzaLMO73tJyINhSR6U9JEHWXUAAACAY2JvcqVjYWxnZnNoYTI1NmNwYWRMAAAAAAAAAAAAAAAAZGhhc2hYIHfZ+AzAeUr4bX/F/29L0485fYvB5uiEEI5OntQYPw9XZG5hbWVuanVtYmYgbWFuaWZlc3RqZXhjbHVzaW9uc4GiZXN0YXJ0GQZDZmxlbmd0aBkeBAAAAj5qdW1iAAAAJ2p1bWRjMmNsABEAEIAAAKoAOJtxA2MycGEuY2xhaW0udjIAAAACD2Nib3KlY2FsZ2ZzaGEyNTZpc2lnbmF0dXJleE1zZWxmI2p1bWJmPS9jMnBhL3VybjpjMnBhOjhlNjkwNGM0LWEzNGMtNDFlNi04NDM0LTRlN2UyYWUxNjY0Yy9jMnBhLnNpZ25hdHVyZWppbnN0YW5jZUlEeCx4bXA6aWlkOmMwY2ZlYWE2LTZjZmItNDM4Yi1iZjk3LTQ4ZjJiYmExOWZlOXJjcmVhdGVkX2Fzc2VydGlvbnODomN1cmx4LXNlbGYjanVtYmY9YzJwYS5hc3NlcnRpb25zL2MycGEuaW5ncmVkaWVudC52M2RoYXNoWCCw1z0SYt+O07BodfxDn0l6RIhc5dxT18zyUQbZuvvyAqJjdXJseCpzZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmFjdGlvbnMudjJkaGFzaFggr1wBP/fH++6yIPEF9Qj6V/v49r0BnoK9L6BWi2ZohD6iY3VybHgpc2VsZiNqdW1iZj1jMnBhLmFzc2VydGlvbnMvYzJwYS5oYXNoLmRhdGFkaGFzaFggBm60/U4cPdVwLd+VPR5FCy8+bycu/MwDPuVOToaPfiF0Y2xhaW1fZ2VuZXJhdG9yX2luZm+jZG5hbWVvQW50aHJvcGljIEZpbGVzZ3ZlcnNpb25lMS4wLjBrc3BlY1ZlcnNpb25lMi40LjAAABA4anVtYgAAAChqdW1kYzJjcwARABCAAACqADibcQNjMnBhLnNpZ25hdHVyZQAAABAIY2JvctKEWQISogEmGCFZAgowggIGMIIBjaADAgECAhRA5aAK7sI50L64g/oGQgU9Z1UTADAKBggqhkjOPQQDAzBJMRcwFQYDVQQKEw5BbnRocm9waWMsIFBCQzEuMCwGA1UEAxMlQW50aHJvcGljIENvbnRlbnQgQ3JlZGVudGlhbHMgUm9vdCBDQTAeFw0yNjA4MDcxODQzNTZaFw0yODA4MDYxOTQzNTZaMEQxFzAVBgNVBAoTDkFudGhyb3BpYywgUEJDMSkwJwYDVQQDEyBBbnRocm9waWMgQ2xhdWRlIENvbnRlbnQgU2lnbmluZzBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABJh6CmvLUBgFFNU0vUKlOVtE6djd17L5SuwX0LemFisBM3dkd/3cyjxFA3Qo5S46fX0/ihY0VZ7mfb9KF703t5OjWDBWMA4GA1UdDwEB/wQEAwIHgDAVBgNVHSUEDjAMBgorBgEEAYPoXgIBMAwGA1UdEwEB/wQCMAAwHwYDVR0jBBgwFoAUzlHiBIFOZFsj+OPEz5o+nMHXXMIwCgYIKoZIzj0EAwMDZwAwZAIwMXMdFJ4BetLLVY7ORuE9noqbbAZOZn/aArXyTwFAZfKrPzxF2vPoJNf1+UCdg1XGAjBwX1zd9WGqYkqmL5SFqw1QySjr1zJfpJM9+1rdDwSPLMOPOjKuiXjoU/pUUeG9RwmhY3BhZFkNngAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPZYQF5APFzvqJB3AVEoSpWeOecFeaVw+Yt1wMOLyCvGuY+vB//Kq95tOaxGg7Yc33YN/Erp5+HS+PUQSq47XYOTK+I=</c2pa:manifest></metadata></svg>';
+function deadMark(p, big) {
+  return p.deceased === 'Y' ? '<span class="dm' + (big ? ' big' : '') + '" title="Passed away">' + DEAD_ICON + '</span>' : '';
+}
+// Small tree button on a card that jumps to that person's parents (side: 'r' or 'l')
+function upBtn(p, side) {
+  const par = byId[p.fatherId] || byId[p.motherId];
+  if (!side || !par) return '';
+  return '<span class="up up-' + side + '" data-root="' + par.id + '" title="Show ' + esc(p.name) + '’s parents">🌳</span>';
+}
+function nodeHtml(p, side) {
+  return '<button class="node ' + (p.gender || '') + (p.deceased === 'Y' ? ' dead' : '') + '" data-open="' + p.id + '"' + tipAttr(p) + '>' +
+    upBtn(p, side) + avatar(p, 48) + '<span class="nm">' + esc(p.name) + '</span><span class="yr">' + deadMark(p) + esc(lifespan(p)) + '</span></button>';
+}
+function branch(p, path, isTop) {
+  if (path.has(p.id)) return '';
+  path = new Set(path); path.add(p.id);
+  const sps = spousesOf(p);
+  const kids = kidsOf(p).filter(k => !path.has(k.id));
+  let h = '<li><div class="couple">' + nodeHtml(p, isTop ? 'l' : '') + sps.map(s => '<span class="amp">♥</span>' + nodeHtml(s, 'r')).join('') + '</div>';
+  if (kids.length) h += '<ul>' + kids.map(k => branch(k, path)).join('') + '</ul>';
+  return h + '</li>';
+}
+function personOptions(selected, filter) {
+  return members.filter(filter || (() => true)).sort((a, b) => a.name.localeCompare(b.name)).map(m =>
+    '<option value="' + m.id + '"' + (selected.includes(m.id) ? ' selected' : '') + '>' + esc(m.name) + (year(m.birthDate) ? ' (' + year(m.birthDate) + ')' : '') + (relLine(m) ? ' — ' + esc(relLine(m)) : '') + '</option>').join('');
+}
+
+// "s/o father & mother" for children; "f/o / m/o eldest child +N" for people at the top of the tree
+function relLine(m) {
+  const par = [byId[m.fatherId], byId[m.motherId]].filter(Boolean).map(x => x.name).join(' & ');
+  if (par) return (m.gender === 'M' ? 's/o ' : m.gender === 'F' ? 'd/o ' : 'child of ') + par;
+  const kids = ownKids(m);
+  if (kids.length) return (m.gender === 'M' ? 'f/o ' : m.gender === 'F' ? 'm/o ' : 'parent of ') + kids[0].name + (kids.length > 1 ? ' +' + (kids.length - 1) : '');
+  return '';
+}
+
+function render() {
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('on', b.dataset.view === view));
+  $('#zoomCtl').style.display = (view === 'tree' && members.length) ? 'flex' : 'none';
+  const main = $('#main');
+  if (!members.length) {
+    main.innerHTML = '<div class="empty"><div style="font-size:48px">🌱</div><p>The family tree is empty.<br>Start with the eldest person you know.</p><button class="pbtn" data-act="new">＋ Add the first person</button></div>';
+    return;
+  }
+  if (view === 'tree') {
+    const root = byId[rootId];
+    const up = root && (byId[root.fatherId] || byId[root.motherId]);
+    main.innerHTML =
+      '<div class="bar"><label for="rootSel">Tree starting from</label><select id="rootSel">' + personOptions([rootId]) + '</select>' +
+      (up ? '<button class="sbtn" data-root="' + up.id + '">⬆ Parents</button>' : '') + '</div>' +
+      '<div id="treeWrap"><div class="tree" id="tree" style="zoom:' + zoom + '"><ul>' + branch(root, new Set(), true) + '</ul></div></div>';
+    sizeTree();
+    const w = $('#treeWrap'); w.scrollLeft = (w.scrollWidth - w.clientWidth) / 2;
+  } else {
+    const q = query.toLowerCase();
+    const list = members.filter(m => !q || (m.name + ' ' + m.place + ' ' + m.notes).toLowerCase().includes(q)).sort((a, b) => a.name.localeCompare(b.name));
+    main.innerHTML = '<div class="bar"><input type="text" id="search" placeholder="🔍 Search ' + members.length + ' people" value="' + esc(query) + '"></div><div class="list">' +
+      (list.map(m => {
+        return '<button class="row ' + (m.gender || '') + (m.deceased === 'Y' ? ' dead' : '') + '" data-open="' + m.id + '"' + tipAttr(m) + '>' + avatar(m, 46) +
+          '<span><b>' + esc(m.name) + '</b><br><span class="sub">' + deadMark(m) + esc([lifespan(m), relLine(m), m.place].filter(Boolean).join(' · ')) + '</span></span></button>';
+      }).join('') || '<div class="empty">No one matches.</div>') + '</div>';
+  }
+}
+
+// Tree box fills the rest of the screen, so both scrollbars stay visible
+function sizeTree() {
+  const w = $('#treeWrap'); if (!w) return;
+  w.style.height = Math.max(240, window.innerHeight - w.getBoundingClientRect().top - window.scrollY) + 'px';
+}
+window.addEventListener('resize', sizeTree);
+// Drag with the mouse to move around the tree (touch screens already swipe)
+let drag = null, dragMoved = false;
+document.addEventListener('mousedown', ev => {
+  const w = ev.target.closest('#treeWrap');
+  if (!w || ev.button !== 0) return;
+  drag = { w, x: ev.clientX, y: ev.clientY, l: w.scrollLeft, t: w.scrollTop }; dragMoved = false;
+});
+document.addEventListener('mousemove', ev => {
+  if (!drag) return;
+  const dx = ev.clientX - drag.x, dy = ev.clientY - drag.y;
+  if (Math.abs(dx) + Math.abs(dy) > 5) { dragMoved = true; drag.w.style.cursor = 'grabbing'; }
+  if (dragMoved) { drag.w.scrollLeft = drag.l - dx; drag.w.scrollTop = drag.t - dy; ev.preventDefault(); }
+});
+document.addEventListener('mouseup', () => { if (drag) drag.w.style.cursor = ''; drag = null; });
+document.addEventListener('click', ev => { if (dragMoved) { ev.stopPropagation(); ev.preventDefault(); dragMoved = false; } }, true);
+
+function setData(d, keepRoot) {
+  members = (d && d.members) || [];
+  byId = {}; rowIdx = {}; members.forEach((m, i) => { byId[m.id] = m; rowIdx[m.id] = i; });
+  if (!keepRoot || !byId[rootId]) rootId = store.get('ft_root');
+  if (!byId[rootId]) rootId = pickRoot();
+  render();
+}
+function load(silent) {
+  if (!silent) busy(true, 'Loading…');
+  return call('getData').then(d => { setData(d, true); busy(false); }).catch(e => { busy(false); toast('Could not load: ' + errMsg(e), 5000); });
+}
+
+// ---------- person sheet ----------
+function openSheet(html) { $('#sheet').innerHTML = '<button class="x" data-act="close" aria-label="Close">✕</button>' + html; $('#sheetBg').classList.add('open'); $('#sheet').scrollTop = 0; }
+function closeSheet() { $('#sheetBg').classList.remove('open'); }
+function chips(list) { return list.length ? '<div class="chips">' + list.map(m => '<button class="chip" data-open="' + m.id + '"' + tipAttr(m) + '>' + avatar(m, 28) + esc(m.name) + '</button>').join('') + '</div>' : ''; }
+
+function openPerson(id) {
+  const p = byId[id]; if (!p) return;
+  const parents = [byId[p.fatherId], byId[p.motherId]].filter(Boolean);
+  const sps = spousesOf(p), kids = ownKids(p), sibs = siblingsOf(p);
+  const facts = [
+    year(p.birthDate) && ['Born', String(year(p.birthDate))],
+    year(p.deathDate) && ['Passed away', String(year(p.deathDate))],
+    p.place && ['Place', p.place],
+    p.phone && ['Phone', '<a href="tel:' + esc(p.phone.replace(/[^\d+]/g, '')) + '">' + esc(p.phone) + '</a>', true],
+    p.notes && ['Notes', esc(p.notes).replace(/\n/g, '<br>'), true]
+  ].filter(Boolean);
+  const sec = (t, l) => l.length ? '<div class="rel"><h4>' + t + '</h4>' + chips(l) + '</div>' : '';
+  openSheet(
+    '<button class="treeBtn" data-root="' + p.id + '" title="Show the tree from this person">🌳 Show tree</button>' +
+    '<div class="phead ' + (p.gender || '') + (p.deceased === 'Y' ? ' dead' : '') + '">' + avatar(p, 120) + '<h2>' + esc(p.name) + '</h2><div class="yr">' + deadMark(p, true) + esc(lifespan(p)) + '</div></div>' +
+    (facts.length ? '<div class="facts">' + facts.map(f => '<div><b>' + f[0] + '</b>' + (f[2] ? f[1] : esc(f[1])) + '</div>').join('') + '</div>' : '') +
+    sec('Parents', parents) + sec(sps.length > 1 ? 'Spouses' : 'Spouse', sps) +
+    (kids.length ? '<div class="rel" id="kidsSec"><h4 style="display:flex;align-items:center;justify-content:space-between">Children (eldest first)' +
+      (kids.length > 1 ? '<button class="sbtn" data-act="reorder" data-id="' + p.id + '" style="text-transform:none;letter-spacing:0">↕ Arrange order</button>' : '') +
+      '</h4>' + chips(kids) + '</div>' : '') +
+    sec('Brothers & sisters', sibs) +
+    '<div class="actions">' +
+      '<button class="pbtn wide" data-act="edit" data-id="' + p.id + '">✏️ Edit details / photo</button>' +
+      '<button class="ghost" data-act="child" data-id="' + p.id + '">＋ Add child</button>' +
+      '<button class="ghost" data-act="spouse" data-id="' + p.id + '">＋ Add spouse</button>' +
+      (!byId[p.fatherId] ? '<button class="ghost" data-act="father" data-id="' + p.id + '">＋ Add father</button>' : '') +
+      (!byId[p.motherId] ? '<button class="ghost" data-act="mother" data-id="' + p.id + '">＋ Add mother</button>' : '') +
+    '</div>' +
+    (p.updatedBy || p.updatedAt ? '<p class="hint" style="text-align:center;margin-top:14px">Last updated' + (p.updatedBy ? ' by ' + esc(p.updatedBy) : '') + (p.updatedAt ? ' on ' + esc(new Date(p.updatedAt).toLocaleDateString()) : '') + '</p>' : '')
+  );
+}
+
+// ---------- add / edit form ----------
+function spouseSelect(selectedId, selfId) {
+  return '<select class="f_spouse" style="margin-bottom:6px"><option value="">— not added —</option>' +
+    personOptions([selectedId], m => m.id !== selfId) + '</select>';
+}
+function blank() { return { id: '', name: '', gender: '', birthDate: '', deathDate: '', deceased: '', place: '', phone: '', notes: '', fatherId: '', motherId: '', spouseIds: '', photoId: '' }; }
+
+function openForm(p, preset) {
+  preset = preset || {};
+  editing = p ? Object.assign({}, p) : Object.assign(blank(), preset.fields || {});
+  photoData = null; removePhoto = false; linkChild = preset.linkChild || null;
+  const e = editing, self = m => m.id !== e.id;
+  const needCode = NEEDS_CODE && !store.get('ft_code');
+  openSheet(
+    '<h2 style="margin:4px 0 14px">' + (e.id ? 'Edit ' + esc(e.name) : (preset.heading || 'Add a family member')) + '</h2>' +
+    '<form id="pform" autocomplete="off">' +
+    '<div class="photoBox"><div id="pPrev">' + avatar(Object.assign({}, e, { name: e.name || '?' }), 110) + '</div>' +
+      '<div class="pbtns">' +
+        '<label class="ghost">🖼️ Gallery<input class="vh" type="file" accept="image/*" data-photo></label>' +
+        '<label class="ghost">🤳 Selfie<input class="vh" type="file" accept="image/*" capture="user" data-photo></label>' +
+        '<label class="ghost">📷 Camera<input class="vh" type="file" accept="image/*" capture="environment" data-photo></label>' +
+        (e.photoId ? '<button type="button" class="ghost" data-act="rmphoto">Remove</button>' : '') +
+      '</div><div class="hint">Use Camera to photograph an old printed photo.</div></div>' +
+    '<div class="f"><label class="l">Full name * (in Tamil)</label><input type="text" id="f_name" class="tamil" lang="ta" required maxlength="200" value="' + esc(e.name) + '"></div>' +
+    '<div class="f"><label class="l">Gender *</label><div class="seg">' +
+      '<label' + (e.gender === 'M' ? ' class="on"' : '') + '><input type="radio" name="g" value="M"' + (e.gender === 'M' ? ' checked' : '') + '>Male</label>' +
+      '<label' + (e.gender === 'F' ? ' class="on"' : '') + '><input type="radio" name="g" value="F"' + (e.gender === 'F' ? ' checked' : '') + '>Female</label></div></div>' +
+    '<div class="two"><div class="f"><label class="l">Year of birth (optional)</label><input type="text" id="f_birth" inputmode="numeric" maxlength="4" placeholder="e.g. 1948" value="' + esc(year(e.birthDate) || '') + '"></div>' +
+      '<div class="f"><label class="l">Native / living place (in Tamil)</label><input type="text" id="f_place" class="tamil" lang="ta" value="' + esc(e.place) + '"></div></div>' +
+    '<div class="f"><label class="check"><input type="checkbox" id="f_dead"' + (e.deceased === 'Y' ? ' checked' : '') + '> Passed away</label>' +
+      '<input type="text" id="f_death" inputmode="numeric" maxlength="4" placeholder="Year of passing (optional), e.g. 2004" value="' + esc(year(e.deathDate) || '') + '" style="margin-top:6px;' + (e.deceased === 'Y' ? '' : 'display:none') + '"></div>' +
+    '<div class="f"><label class="l">Phone (10 digits)</label><input type="tel" id="f_phone" inputmode="numeric" pattern="[0-9]*" maxlength="10" placeholder="e.g. 9876543210" value="' + esc(e.phone) + '"></div>' +
+    '<div class="f"><label class="l">Father</label><select id="f_father"><option value="">— not added —</option>' + personOptions([e.fatherId], m => self(m) && m.gender !== 'F') + '</select></div>' +
+    '<div class="f"><label class="l">Mother</label><select id="f_mother"><option value="">— not added —</option>' + personOptions([e.motherId], m => self(m) && m.gender !== 'M') + '</select></div>' +
+    '<div class="f" id="spouseBox"><label class="l">Spouse</label>' +
+      (ids(e.spouseIds).length ? ids(e.spouseIds) : ['']).map(sid => spouseSelect(sid, e.id)).join('') +
+      '<button type="button" class="sbtn" data-act="addSpouse" style="margin-top:6px">＋ Another spouse (remarriage)</button></div>' +
+    '<div class="f"><label class="l">Notes (nickname, occupation, memories…)</label><textarea id="f_notes" maxlength="2000">' + esc(e.notes) + '</textarea></div>' +
+    '<div class="f"><label class="l">Your name (who is making this change) * (in Tamil)</label><input type="text" id="f_editor" class="tamil" lang="ta" list="editorList" autocomplete="off" placeholder="Type or pick your name" value="' + esc(store.get('ft_editor') || '') + '">' +
+      '<datalist id="editorList">' + Array.from(new Set(members.map(m => m.name.trim()).filter(n => n && !NON_TAMIL.test(n)))).sort((a, b) => a.localeCompare(b)).map(n => '<option value="' + esc(n) + '">').join('') + '</datalist></div>' +
+    (needCode ? '<div class="f"><label class="l">Family code</label><input type="text" id="f_code" inputmode="numeric" placeholder="Shared in the WhatsApp group"></div>' : '') +
+    '<div class="actions"><button type="submit" class="pbtn alt wide">💾 Save</button>' +
+      (e.id ? '<button type="button" class="ghost" data-open="' + e.id + '">Cancel</button><button type="button" class="danger" data-act="delete">Delete person</button>' : '<button type="button" class="ghost wide" data-act="close">Cancel</button>') +
+    '</div></form>'
+  );
+  $('#f_dead').onchange = ev => { $('#f_death').style.display = ev.target.checked ? '' : 'none'; };
+  $('#pform').onsubmit = submitForm;
+  if (!e.id) setTimeout(() => { const n = $('#f_name'); if (n) n.focus(); }, 150);
+}
+
+// Load the chosen photo into a canvas (max 2000px, phone rotation already applied by the browser)
+function loadImageCanvas(file, max) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const s = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.naturalWidth * s); c.height = Math.round(img.naturalHeight * s);
+      const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+      ctx.drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      res(c);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('This photo format could not be read. Try another photo.')); };
+    img.src = url;
+  });
+}
+
+async function onPhotoChosen(input) {
+  const file = input.files && input.files[0];
+  input.value = '';
+  if (!file) return;
+  try {
+    const canvas = await loadImageCanvas(file, 2000);
+    const out = await openCropper(canvas);
+    if (!out) return;                       // cancelled
+    photoData = out;
+    removePhoto = false;
+    $('#pPrev').innerHTML = '<img class="av ' + (editing.gender || '') + '" style="width:110px;height:110px" src="' + photoData + '">';
+  } catch (e) { toast(errMsg(e), 4000); }
+}
+
+// ---------- photo cropper: drag to move, pinch / slider / wheel to zoom, rotate ----------
+function openCropper(srcCanvas) {
+  return new Promise(resolve => {
+    const bg = document.createElement('div');
+    bg.className = 'crop-bg';
+    bg.innerHTML =
+      '<div class="crop-box"><h3>Crop the photo</h3><div class="crop-hint">Drag to move · pinch or use the slider to zoom</div>' +
+      '<div class="crop-stage"><canvas class="crop-img"></canvas><div class="crop-ring"></div></div>' +
+      '<div class="crop-tools"><span>－</span><input type="range" class="crop-zoom" min="1" max="5" step="0.01" value="1"><span>＋</span>' +
+      '<button type="button" class="ghost crop-rot" title="Rotate">⟳ Rotate</button></div>' +
+      '<div class="actions"><button type="button" class="pbtn alt crop-ok">✔ Use this</button><button type="button" class="ghost crop-cancel">Cancel</button></div></div>';
+    document.body.appendChild(bg);
+    const stage = bg.querySelector('.crop-stage'), view = bg.querySelector('.crop-img'), zoomEl = bg.querySelector('.crop-zoom');
+    let src = srcCanvas, V, base, z = 1, x = 0, y = 0;
+    const ptrs = new Map(); let last = null, pinch = null;
+
+    function setup() {
+      V = stage.clientWidth;
+      view.width = src.width; view.height = src.height;
+      view.getContext('2d').drawImage(src, 0, 0);
+      base = Math.max(V / src.width, V / src.height);     // smallest zoom that still fills the circle
+      z = 1; zoomEl.value = 1;
+      x = (V - src.width * base) / 2; y = (V - src.height * base) / 2;
+      apply();
+    }
+    function clamp() {
+      const sc = base * z, w = src.width * sc, h = src.height * sc;
+      x = Math.min(0, Math.max(V - w, x)); y = Math.min(0, Math.max(V - h, y));
+    }
+    function apply() { clamp(); view.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + (base * z) + ')'; }
+    function zoomTo(nz, cx, cy) {
+      nz = Math.max(1, Math.min(5, nz));
+      if (cx == null) { cx = V / 2; cy = V / 2; }
+      const k = nz / z;
+      x = cx - (cx - x) * k; y = cy - (cy - y) * k; z = nz; zoomEl.value = z; apply();
+    }
+    const local = e => { const r = stage.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+
+    stage.addEventListener('pointerdown', e => {
+      stage.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, local(e));
+      if (ptrs.size === 1) last = local(e);
+      if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]), z }; }
+      e.preventDefault();
+    });
+    stage.addEventListener('pointermove', e => {
+      if (!ptrs.has(e.pointerId)) return;
+      ptrs.set(e.pointerId, local(e));
+      if (ptrs.size === 2 && pinch) {
+        const [a, b] = [...ptrs.values()];
+        zoomTo(pinch.z * Math.hypot(a[0] - b[0], a[1] - b[1]) / pinch.d, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2);
+      } else if (ptrs.size === 1 && last) {
+        const p = local(e); x += p[0] - last[0]; y += p[1] - last[1]; last = p; apply();
+      }
+      e.preventDefault();
+    });
+    const up = e => { ptrs.delete(e.pointerId); pinch = null; last = ptrs.size === 1 ? [...ptrs.values()][0] : null; };
+    stage.addEventListener('pointerup', up); stage.addEventListener('pointercancel', up);
+    stage.addEventListener('wheel', e => { e.preventDefault(); const p = local(e); zoomTo(z * (e.deltaY < 0 ? 1.1 : 1 / 1.1), p[0], p[1]); }, { passive: false });
+    zoomEl.addEventListener('input', () => zoomTo(+zoomEl.value));
+    bg.querySelector('.crop-rot').onclick = () => {
+      const c = document.createElement('canvas'); c.width = src.height; c.height = src.width;
+      const ctx = c.getContext('2d'); ctx.translate(c.width, 0); ctx.rotate(Math.PI / 2); ctx.drawImage(src, 0, 0);
+      src = c; setup();
+    };
+    const close = val => { bg.remove(); window.removeEventListener('resize', onResize); resolve(val); };
+    bg.querySelector('.crop-cancel').onclick = () => close(null);
+    bg.querySelector('.crop-ok').onclick = () => {
+      const sc = base * z, size = Math.min(800, Math.round(V / sc));   // keep original sharpness, max 800px
+      const out = document.createElement('canvas'); out.width = out.height = Math.max(200, size);
+      out.getContext('2d').drawImage(src, -x / sc, -y / sc, V / sc, V / sc, 0, 0, out.width, out.height);
+      close(out.toDataURL('image/jpeg', 0.85));
+    };
+    const onResize = () => { const keep = z; setup(); zoomTo(keep); };
+    window.addEventListener('resize', onResize);
+    requestAnimationFrame(setup);
+  });
+}
+
+async function submitForm(ev) {
+  ev.preventDefault();
+  const name = $('#f_name').value.trim();
+  if (!name) { toast('Please enter a name'); return; }
+  if (NON_TAMIL.test(name)) { toast('Please write the name in Tamil only', 3500); $('#f_name').focus(); return; }
+  if (NON_TAMIL.test($('#f_place').value)) { toast('Please write the place in Tamil only', 3500); $('#f_place').focus(); return; }
+  const thisYear = new Date().getFullYear();
+  const by = $('#f_birth').value.trim(), dy = $('#f_dead').checked ? $('#f_death').value.trim() : '';
+  const badYear = v => v && (!/^\d{4}$/.test(v) || +v < 1500 || +v > thisYear);
+  if (badYear(by)) { toast('Year of birth should be 4 digits, e.g. 1948'); $('#f_birth').focus(); return; }
+  if (badYear(dy)) { toast('Year of passing should be 4 digits, e.g. 2004'); $('#f_death').focus(); return; }
+  if (by && dy && +dy < +by) { toast('Year of passing is before year of birth'); return; }
+  const ph = $('#f_phone').value.trim();
+  if (ph && !/^\d{1,10}$/.test(ph)) { toast('Phone should be numbers only, up to 10 digits'); $('#f_phone').focus(); return; }
+  const g = document.querySelector('input[name=g]:checked');
+  if (!g) { toast('Please select Male or Female'); document.querySelector('.seg').scrollIntoView({ block: 'center', behavior: 'smooth' }); return; }
+  const dead = $('#f_dead').checked;
+  const editor = $('#f_editor').value.trim();
+  if (!editor) { toast('Please enter your name (who is making this change)', 3500); $('#f_editor').focus(); return; }
+  if (NON_TAMIL.test(editor)) { toast('Please write your name in Tamil only', 3500); $('#f_editor').focus(); return; }
+  const codeEl = $('#f_code');
+  const code = codeEl ? codeEl.value.trim() : (store.get('ft_code') || '');
+  if (NEEDS_CODE && !code) { toast('Please enter the family code'); return; }
+  if (editor) store.set('ft_editor', editor);
+  const payload = {
+    id: editing.id, name, gender: g ? g.value : '',
+    birthDate: $('#f_birth').value.trim(), place: $('#f_place').value.trim(), phone: $('#f_phone').value.trim(),
+    deceased: dead ? 'Y' : '', deathDate: dead ? $('#f_death').value.trim() : '',
+    notes: $('#f_notes').value.trim(), fatherId: $('#f_father').value, motherId: $('#f_mother').value,
+    spouseIds: Array.from(document.querySelectorAll('.f_spouse')).map(x => x.value).filter((v, i, arr) => v && arr.indexOf(v) === i),
+    photoData, removePhoto, linkChild, editor
+  };
+  busy(true, photoData ? 'Uploading photo & saving…' : 'Saving…');
+  try {
+    const d = await call('saveMember', payload, code);
+    if (NEEDS_CODE) store.set('ft_code', code);
+    setData(d, true);
+    busy(false); toast('Saved ✓');
+    openPerson(d.savedId);
+  } catch (e) {
+    busy(false);
+    if (errMsg(e).includes('WRONG_CODE')) {
+      store.del('ft_code'); toast('Family code is wrong. Please check the WhatsApp group.', 4000);
+      if (!codeEl) openForm(editing.id ? editing : null, { fields: payload, linkChild });
+    } else toast('Not saved: ' + errMsg(e), 5000);
+  }
+}
+
+async function deletePerson(btn) {
+  const ed = $('#f_editor').value.trim();
+  if (!ed || NON_TAMIL.test(ed)) { toast('Please enter your name in Tamil before deleting', 3500); $('#f_editor').focus(); return; }
+  store.set('ft_editor', ed);
+  if (!btn.classList.contains('armed')) { btn.classList.add('armed'); btn.textContent = 'Tap again to delete'; return; }
+  const code = ($('#f_code') && $('#f_code').value.trim()) || store.get('ft_code') || '';
+  busy(true, 'Deleting…');
+  try {
+    const d = await call('deleteMember', editing.id, code, $('#f_editor').value.trim());
+    if (rootId === editing.id) { rootId = null; store.del('ft_root'); }
+    setData(d, true); busy(false); closeSheet(); toast('Deleted');
+  } catch (e) {
+    busy(false);
+    if (errMsg(e).includes('WRONG_CODE')) { store.del('ft_code'); toast('Family code is wrong.', 4000); }
+    else toast('Not deleted: ' + errMsg(e), 5000);
+  }
+}
+
+// ---------- arrange children (drag to reorder) ----------
+function startReorder(p) {
+  const kids = ownKids(p);
+  const needCode = NEEDS_CODE && !store.get('ft_code');
+  $('#kidsSec').innerHTML = '<h4>Drag ☰ to arrange — eldest at top</h4><div id="ordList">' +
+    kids.map((k, i) => '<div class="oitem" data-cid="' + k.id + '"><span class="onum">' + (i + 1) + '</span>' + avatar(k, 34) +
+      '<span class="oname">' + esc(k.name) + '</span><span class="handle" aria-label="Drag">☰</span></div>').join('') + '</div>' +
+    (needCode ? '<input type="text" id="o_code" inputmode="numeric" placeholder="Family code" style="margin-top:6px">' : '') +
+    '<div class="actions"><button class="pbtn alt" data-act="ordSave" data-id="' + p.id + '">💾 Save order</button>' +
+    '<button class="ghost" data-act="ordCancel" data-id="' + p.id + '">Cancel</button></div>';
+  $('#kidsSec').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+let od = null;
+const OGAP = 6;
+document.addEventListener('pointerdown', ev => {
+  const h = ev.target.closest('#ordList .handle'); if (!h) return;
+  const it = h.closest('.oitem');
+  od = { it, y: ev.clientY, id: ev.pointerId };
+  it.classList.add('dragging');
+  try { h.setPointerCapture(ev.pointerId); } catch (e) {}
+  ev.preventDefault();
+});
+document.addEventListener('pointermove', ev => {
+  if (!od || ev.pointerId !== od.id) return;
+  const list = od.it.parentNode;
+  let dy = ev.clientY - od.y;
+  const prev = od.it.previousElementSibling, next = od.it.nextElementSibling;
+  if (prev && dy < -(prev.offsetHeight + OGAP) / 2) { list.insertBefore(od.it, prev); od.y -= prev.offsetHeight + OGAP; }
+  else if (next && dy > (next.offsetHeight + OGAP) / 2) { list.insertBefore(next, od.it); od.y += next.offsetHeight + OGAP; }
+  dy = ev.clientY - od.y;
+  od.it.style.transform = 'translateY(' + dy + 'px)';
+  ev.preventDefault();
+});
+function endDrag(ev) {
+  if (!od || (ev && ev.pointerId !== od.id)) return;
+  od.it.style.transform = ''; od.it.classList.remove('dragging'); od = null;
+  document.querySelectorAll('#ordList .onum').forEach((n, i) => n.textContent = i + 1);
+}
+document.addEventListener('pointerup', endDrag);
+document.addEventListener('pointercancel', endDrag);
+
+async function saveOrder(pid) {
+  const order = Array.from(document.querySelectorAll('#ordList .oitem')).map(e => e.dataset.cid);
+  const codeEl = $('#o_code');
+  const code = codeEl ? codeEl.value.trim() : (store.get('ft_code') || '');
+  if (NEEDS_CODE && !code) { toast('Please enter the family code'); return; }
+  busy(true, 'Saving order…');
+  try {
+    const d = await call('saveChildOrder', pid, order, code, store.get('ft_editor') || '');
+    if (NEEDS_CODE) store.set('ft_code', code);
+    setData(d, true); busy(false); toast('Order saved ✓'); openPerson(pid);
+  } catch (e) {
+    busy(false);
+    if (errMsg(e).includes('WRONG_CODE')) { store.del('ft_code'); toast('Family code is wrong.', 4000); startReorder(byId[pid]); }
+    else toast('Not saved: ' + errMsg(e), 5000);
+  }
+}
+
+// ---------- tooltip (mouse only; phones have no hover) ----------
+let tipEl = null;
+document.addEventListener('mouseover', ev => {
+  const t = ev.target.closest && ev.target.closest('[data-tip]');
+  const tip = $('#tip');
+  if (!t || drag) { tip.style.display = 'none'; tipEl = null; return; }
+  if (t !== tipEl) { tipEl = t; tip.textContent = t.dataset.tip; tip.style.display = 'block'; }
+});
+document.addEventListener('mousemove', ev => {
+  if (!tipEl) return;
+  const tip = $('#tip'), w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = ev.clientX + 14, y = ev.clientY + 16;
+  if (x + w > window.innerWidth - 6) x = ev.clientX - w - 10;
+  if (y + h > window.innerHeight - 6) y = ev.clientY - h - 10;
+  tip.style.left = x + 'px'; tip.style.top = y + 'px';
+});
+['mouseout', 'mousedown', 'scroll', 'touchstart'].forEach(e => document.addEventListener(e, ev => {
+  if (e === 'mouseout' && ev.relatedTarget && tipEl && tipEl.contains(ev.relatedTarget)) return;
+  if (e === 'mouseout' && ev.relatedTarget && ev.relatedTarget.closest && ev.relatedTarget.closest('[data-tip]') === tipEl) return;
+  $('#tip').style.display = 'none'; tipEl = null;
+}, true));
+
+// ---------- events ----------
+document.addEventListener('click', ev => {
+  const t = ev.target.closest('[data-open],[data-act],[data-root],[data-view]');
+  if (!t) { if (ev.target === $('#sheetBg')) closeSheet(); return; }
+  if (t.dataset.view) { view = t.dataset.view; render(); return; }
+  if (t.dataset.root) { rootId = t.dataset.root; store.set('ft_root', rootId); view = 'tree'; closeSheet(); render(); return; }
+  if (t.dataset.open) { openPerson(t.dataset.open); return; }
+  const act = t.dataset.act, p = byId[t.dataset.id];
+  if (act === 'close') closeSheet();
+  else if (act === 'new') openForm(null);
+  else if (act === 'edit') openForm(p);
+  else if (act === 'rmphoto') { removePhoto = true; photoData = null; $('#pPrev').innerHTML = avatar(Object.assign({}, editing, { photoId: '', name: editing.name || '?' }), 110); t.remove(); }
+  else if (act === 'delete') deletePerson(t);
+  else if (act === 'reorder') startReorder(p);
+  else if (act === 'addSpouse') t.insertAdjacentHTML('beforebegin', spouseSelect('', editing && editing.id));
+  else if (act === 'ordSave') saveOrder(t.dataset.id);
+  else if (act === 'ordCancel') openPerson(t.dataset.id);
+  else if (act === 'child') {
+    const sp = spousesOf(p)[0];
+    const f = {};
+    if (p.gender === 'F') { f.motherId = p.id; if (sp) f.fatherId = sp.id; } else { f.fatherId = p.id; if (sp) f.motherId = sp.id; }
+    openForm(null, { fields: f, heading: 'Add a child of ' + p.name });
+  }
+  else if (act === 'spouse') openForm(null, { fields: { spouseIds: p.id, gender: p.gender === 'M' ? 'F' : p.gender === 'F' ? 'M' : '' }, heading: 'Add spouse of ' + p.name });
+  else if (act === 'father' || act === 'mother') {
+    const other = byId[act === 'father' ? p.motherId : p.fatherId];
+    openForm(null, { fields: { gender: act === 'father' ? 'M' : 'F', spouseIds: other ? other.id : '' }, linkChild: { childId: p.id, role: act }, heading: 'Add ' + act + ' of ' + p.name });
+  }
+});
+document.addEventListener('change', ev => {
+  if (ev.target.matches('[data-photo]')) onPhotoChosen(ev.target);
+  if (ev.target.name === 'g') document.querySelectorAll('.seg label').forEach(l => l.classList.toggle('on', l.contains(ev.target)));
+  if (ev.target.id === 'rootSel') { rootId = ev.target.value; store.set('ft_root', rootId); render(); }
+});
+// Name and place: Tamil letters only (plus spaces, digits and . , - ( ) )
+const NON_TAMIL = /[^\u0B80-\u0BFF\u200C\u200D\s0-9.,\-()]/;
+const NON_TAMIL_G = new RegExp(NON_TAMIL.source, 'g');
+function checkTamil(el) {
+  const prev = el.dataset.prev != null ? el.dataset.prev : el.defaultValue;
+  const count = v => (v.match(NON_TAMIL_G) || []).length;
+  if (count(el.value) > count(prev)) {          // a non-Tamil character was just typed or pasted
+    el.value = prev;
+    toast('Please type in Tamil (தமிழ்)', 2500);
+  }
+  el.dataset.prev = el.value;
+}
+document.addEventListener('compositionend', ev => { if (ev.target.classList && ev.target.classList.contains('tamil')) checkTamil(ev.target); });
+document.addEventListener('input', ev => {
+  if (ev.target.classList && ev.target.classList.contains('tamil')) { if (!ev.isComposing) checkTamil(ev.target); return; }
+  if (ev.target.id === 'f_phone') {
+    let v = ev.target.value.replace(/\D/g, '');
+    if (v.length > 10 && v.startsWith('91')) v = v.slice(2);      // pasted with +91
+    else if (v.length === 11 && v.startsWith('0')) v = v.slice(1); // pasted with leading 0
+    v = v.slice(0, 10);
+    if (v !== ev.target.value) ev.target.value = v;
+    return;
+  }
+  if (ev.target.id === 'search') {
+    query = ev.target.value; const pos = ev.target.selectionStart; render();
+    const s = $('#search'); s.focus(); try { s.setSelectionRange(pos, pos); } catch (e) {}
+  }
+});
+$('#btnAdd').onclick = () => openForm(null);
+$('#btnRefresh').onclick = () => load();
+function setZoom(z) { zoom = Math.max(0.4, Math.min(1.6, Math.round(z * 10) / 10)); store.set('ft_zoom', zoom); const t = $('#tree'); if (t) t.style.zoom = zoom; }
+$('#zIn').onclick = () => setZoom(zoom + 0.1);
+$('#zOut').onclick = () => setZoom(zoom - 0.1);
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape') closeSheet(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden && !$('#sheetBg').classList.contains('open')) load(true); });
+
+if (typeof google === 'undefined' || !google.script) {
+  $('#main').innerHTML = '<div class="empty"><div style="font-size:40px">⚙️</div><p><b>This file can\'t run on its own.</b><br>Paste it into Google Apps Script and open the <b>Web app URL</b> (ending in /exec).<br>See README.md, steps 1–3.</p></div>';
+} else {
+  load();
+}
+</script>
+</body>
+</html>
